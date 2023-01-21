@@ -3,18 +3,20 @@ import matplotlib.pyplot as plt
 import copy
 import numpy as np
 import torch
+import os
 
 from src import model
 from src import util
 from src.body import Body
 from src.hand import Hand
 from ann import ANN_Model
-import os
+
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 body_estimation = Body('model/body_pose_model.pth')
 hand_estimation = Hand('model/hand_pose_model.pth')
-data_name=1#初始資料名稱編碼
+
+data_name=1 #初始資料名稱編碼
 
 print(f"Torch device: {torch.cuda.get_device_name()}")
 
@@ -26,13 +28,16 @@ while True:
     candidate, subset = body_estimation(oriImg)
     canvas = copy.deepcopy(oriImg)
     canvas = util.draw_bodypose(canvas, candidate, subset)
+
     normal=0
     fall=0
     hand=0
     not_normal=0
     not_normal_hand=0
+
     for a in range(subset.shape[0]):
         data_dict={}
+        #print(a)
         for b in range(18):
             for c in range(candidate.shape[0]):
                 if subset[a,b]==int(candidate[c,3]):
@@ -40,6 +45,7 @@ while True:
 
                 if subset[a,b]==-1:
                     data_dict.setdefault(b,[-1,-1,-1])
+
 
         data_list1=[]
         data_list2=[]
@@ -110,32 +116,67 @@ while True:
         ANN_Model.load_state_dict(torch.load(ann_path))
         data_teat=np.reshape(data_lists1,(-1,36))
 
+        # Test with batch of images
         import torchvision
 
+        '''
+        # get batch of images from the test DataLoader
+        images, labels = next(iter(test_loader))
+
+        # show all images as one image grid
+        imageshow(torchvision.utils.make_grid(images))
+
+        # Show the real labels on the screen
+        print('Real labels: ', ' '.join('%5s' % classes[labels[j]]
+                                   for j in range(batch_size)))
+        '''
+
+        # Let's see what if the model identifiers the  labels of those example
         anndata = torch.tensor(data_teat)
         outputs = ANN_Model(anndata.float())
+        #print(outputs)
+
+        # We got the probability for every 10 labels. The highest (max) probability should be correct label
         ef, predicted = torch.max(outputs,1)
         ef = ef.detach().numpy()
         predicted = np.array(predicted)
+        #print(predicted)
+        #print(ef)
+
+
+        # Import playsound plug-in to play recording files
+        from playsound import playsound
+
         if np.count_nonzero(data_lists1 == -1) >= 26:
             continue
         for i in predicted:
             if i==0:
                 normal+=1
                 #print("正常")
+                playsound('./my_recorder_normal.mp3')  # Please modify the file to your recording
             elif i ==1:
                 fall+=1
                 #print("跌倒")
+                playsound('./my_recorder_fall.mp3')
             elif i ==2:
                 hand+=1
                 #print("舉手")
+                playsound('./my_recorder_hand.mp3')
             elif i ==3:
                 not_normal_hand+=1
                 #print("行動不便舉手")
+                playsound('./my_recorder_not_normal_hand.mp3')
             elif i ==4:
                 not_normal+=1
                 #print("行動不便")
+                playsound('./my_recorder_not_normal.mp3')
+        # Let's show the predicted labels on the screen to compare with the real ones
+        #print('Predicted: ', ' ',predicted)
+        #print(type(predicted))
+        #np.save('./dataset_rnn/0/tensor_data'+str(data_name)+'.npy', data_lists1)
         data_name+=1
+
+    # Output text
     print("總人數:",subset.shape[0],"  ")
     print("符合正常人數:",normal)
     print("舉手搭車人數:",hand)
@@ -143,7 +184,7 @@ while True:
     print("行動不便舉手人數:",not_normal_hand)
     print("行動不便人數:",not_normal)
 
-    # detect hand
+    # Detect hand
     hands_list = util.handDetect(candidate, subset, oriImg)
 
     all_hand_peaks = []
@@ -155,7 +196,7 @@ while True:
 
     canvas = util.draw_handpose(canvas, all_hand_peaks)
 
-    cv2.imshow('demo', canvas)#一個窗口用以顯示原影像
+    cv2.imshow('demo', canvas) # Show image
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
