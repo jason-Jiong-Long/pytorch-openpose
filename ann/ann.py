@@ -23,12 +23,13 @@ class ANN_Model(nn.Module):
         self.relu1 = nn.ReLU() # activation
         self.fc2 = nn.Linear(18,9)
         self.relu2 = nn.ReLU() # activation
-        self.fc3 = nn.Linear(9,5)
-        self.dropout = nn.Dropout(0.5)
+        self.fc3 = nn.Linear(9,4)
+        #self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
         out_1 = self.fc1(x)
         out_1 = self.relu1(out_1)
+        #out_1 = self.dropout(out_1)
         out_1 = self.fc2(out_1)
         out_1 = self.relu2(out_1)
         out = self.fc3(out_1)
@@ -154,8 +155,6 @@ if __name__ == "__main__":
                 label_default[file_count] = 2
             elif floderName == '3':
                 label_default[file_count] = 3
-            elif floderName == '4':
-                label_default[file_count] = 4
 
             file_count +=1
 
@@ -183,12 +182,12 @@ if __name__ == "__main__":
 
     # Hyper Parameters
     # batch_size, epoch and iteration
-    LR = 0.00001
-    batch_size = 32
+    LR = 0.001
+    batch_size = 128
     n_iters = 10000
     num_epochs = n_iters / (len(features_train) / batch_size)
     num_epochs = int(num_epochs)
-    num_epochs = 500
+    num_epochs = 100
 
     # Pytorch DataLoader
     train_loader = torch.utils.data.DataLoader(train, batch_size = batch_size, shuffle = True)
@@ -199,7 +198,8 @@ if __name__ == "__main__":
     loss_func = nn.CrossEntropyLoss()   # the target label is not one-hotted
 
     print(ANN_model)
-    ANN_optimizer = torch.optim.Adam(ANN_model.parameters(), lr=LR, weight_decay=0.001)   # optimize all cnn parameters
+    ANN_optimizer = torch.optim.Adam(ANN_model.parameters(), lr=LR, weight_decay=0.001)
+
 
     input_shape = (-1,36)
 
@@ -213,11 +213,14 @@ if __name__ == "__main__":
     plt.xlabel('Number of epochs')
     plt.ylabel('Loss')
     plt.legend()
-    plt.show()
+    plt.savefig('./ann_loss.jpg')
+    plt.close()
+
     plt.plot(range(num_epochs), training_accuracy, label='Training_accuracy', color="blue")
     plt.plot(range(num_epochs), validation_accuracy, label='Validation_accuracy', color="red")
     plt.title('Training & Validation accuracy')
     plt.xlabel('Number of epochs')
     plt.ylabel('Accuracy')
     plt.legend()
-    plt.show()
+    plt.savefig('./ann_accuracy.jpg')
+    plt.close()

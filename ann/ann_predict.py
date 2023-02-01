@@ -99,23 +99,37 @@ for a in range(subset.shape[0]):
 
 def testBatch(anndata):
     import torchvision
+    normal=0
+    hand=0
+    not_normal=0
+    not_normal_hand=0
     anndata = torch.tensor(anndata)
     outputs = ANN_Model(anndata.float())
     ef, predicted = torch.max(outputs,1)
     ef = ef.detach().numpy()
     predicted = np.array(predicted)
     print(predicted)
+    if np.count_nonzero(data_lists1 == -1) >= 26:
+        continue
     for i in predicted:
         if i==0:
-            print("正常")
+            normal+=1
+            #print("正常")
         elif i ==1:
-            print("跌倒")
+            hand+=1
+            #print("舉手")
         elif i ==2:
-            print("舉手")
+            not_normal_hand+=1
+            #print("行動不便舉手")
         elif i ==3:
-            print("行動不便舉手")
-        elif i ==4:
-            print("行動不便")
+            not_normal+=1
+            #print("行動不便")
+    #data_name+=1
+    print("總人數:",subset.shape[0],"  ")
+    print("符合正常人數:",normal)
+    print("舉手搭車人數:",hand)
+    print("行動不便舉手人數:",not_normal_hand)
+    print("行動不便人數:",not_normal)
 
 data_teat=data_lists1
 

@@ -52,7 +52,6 @@ def process_frame(frame, body=True, hands=True):
         canvas = util.draw_bodypose(canvas, candidate, subset)
 
         normal=0
-        fall=0
         hand=0
         not_normal=0
         not_normal_hand=0
@@ -151,22 +150,18 @@ def process_frame(frame, body=True, hands=True):
                     normal+=1
                     #print("正常")
                 elif i ==1:
-                    fall+=1
-                    #print("跌倒")
-                elif i ==2:
                     hand+=1
                     #print("舉手")
-                elif i ==3:
+                elif i ==2:
                     not_normal_hand+=1
                     #print("行動不便舉手")
-                elif i ==4:
+                elif i ==3:
                     not_normal+=1
                     #print("行動不便")
             data_name+=1
         print("總人數:",subset.shape[0],"  ")
         print("符合正常人數:",normal)
         print("舉手搭車人數:",hand)
-        print("跌倒危險人數:",fall)
         print("行動不便舉手人數:",not_normal_hand)
         print("行動不便人數:",not_normal)
     if hands:
