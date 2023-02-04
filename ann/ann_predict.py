@@ -12,6 +12,9 @@ from src.hand import Hand
 from ann import ANN_Model
 from torch.autograd import Variable
 import os
+import torch
+ann_path = "ANNModel.pth"
+ANN_Model=ANN_Model()
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 body_estimation = Body('model/body_pose_model.pth')
@@ -21,7 +24,10 @@ data_name=0
 test_image = 'images/abc.jpg'
 oriImg = cv2.imread(test_image)  # B,G,R order
 candidate, subset = body_estimation(oriImg)
-
+normal=0
+hand=0
+not_normal=0
+not_normal_hand=0
 for a in range(subset.shape[0]):
     data_dict={}
     #print(a)
@@ -97,18 +103,16 @@ for a in range(subset.shape[0]):
     data_list_all=np.stack((data_lists1,data_lists2,data_lists3),axis=0)
 
 
-def testBatch(anndata):
+    ANN_Model.load_state_dict(torch.load(ann_path))
+    data_teat=np.reshape(data_lists1,(-1,36))
+
     import torchvision
-    normal=0
-    hand=0
-    not_normal=0
-    not_normal_hand=0
-    anndata = torch.tensor(anndata)
+
+    anndata = torch.tensor(data_teat)
     outputs = ANN_Model(anndata.float())
     ef, predicted = torch.max(outputs,1)
     ef = ef.detach().numpy()
     predicted = np.array(predicted)
-    print(predicted)
     if np.count_nonzero(data_lists1 == -1) >= 26:
         continue
     for i in predicted:
@@ -124,22 +128,13 @@ def testBatch(anndata):
         elif i ==3:
             not_normal+=1
             #print("行動不便")
-    #data_name+=1
-    print("總人數:",subset.shape[0],"  ")
-    print("符合正常人數:",normal)
-    print("舉手搭車人數:",hand)
-    print("行動不便舉手人數:",not_normal_hand)
-    print("行動不便人數:",not_normal)
+    data_name+=1
+print("總人數:",subset.shape[0],"  ")
+print("符合正常人數:",normal)
+print("舉手搭車人數:",hand)
+print("行動不便舉手人數:",not_normal_hand)
+print("行動不便人數:",not_normal)
 
-data_teat=data_lists1
-
-import torch
-ann_path = "ANNModel.pth"
-ANN_Model=ANN_Model()
-ANN_Model.load_state_dict(torch.load(ann_path))
-data_teat=np.reshape(data_teat,(-1,36))
-
-testBatch(data_teat)
 
 canvas = copy.deepcopy(oriImg)
 canvas = util.draw_bodypose(canvas, candidate, subset)
@@ -168,4 +163,6 @@ canvas = util.draw_handpose(canvas, all_hand_peaks)
 
 plt.imshow(canvas[:, :, [2, 1, 0]])
 plt.axis('off')
-plt.show()
+plt.savefig('./images/ann_predict.jpg')
+plt.close()
+#plt.show()
