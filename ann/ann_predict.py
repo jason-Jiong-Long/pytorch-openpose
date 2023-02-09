@@ -130,10 +130,10 @@ for a in range(subset.shape[0]):
             #print("行動不便")
     data_name+=1
 print("總人數:",subset.shape[0],"  ")
-print("符合正常人數:",normal)
-print("舉手搭車人數:",hand)
-print("行動不便舉手人數:",not_normal_hand)
-print("行動不便人數:",not_normal)
+print("站姿人數:",normal)
+print("站姿舉手人數:",hand)
+print("坐姿舉手人數:",not_normal_hand)
+print("坐姿人數:",not_normal)
 
 
 canvas = copy.deepcopy(oriImg)

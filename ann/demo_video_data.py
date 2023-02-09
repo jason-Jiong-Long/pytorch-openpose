@@ -43,7 +43,7 @@ from src.hand import Hand
 
 body_estimation = Body('model/body_pose_model.pth')
 hand_estimation = Hand('model/hand_pose_model.pth')
-data_name=973#初始資料名稱編碼
+data_name=1#初始資料名稱編碼
 
 def process_frame(frame, body=True, hands=True):
     global data_name
@@ -127,8 +127,9 @@ def process_frame(frame, body=True, hands=True):
             data_list_all=np.stack((data_lists1,data_lists2,data_lists3),axis=0)
             print(data_dict)
             print(data_lists1)
-            np.save('./dataset_ann/2/tensor_data'+str(data_name)+'.npy', data_lists1)
-            data_name+=1
+            if np.count_nonzero(data_lists1 == -1) < 10:
+                np.save('./dataset_ann/3/tensor_data'+str(data_name)+'.npy', data_lists1)
+                data_name+=1
     if hands:
         hands_list = util.handDetect(candidate, subset, frame)
         all_hand_peaks = []
